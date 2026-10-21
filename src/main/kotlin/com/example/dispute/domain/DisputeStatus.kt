@@ -16,6 +16,12 @@ enum class DisputeStatus {
             RESOLVED_ACCEPTED, RESOLVED_REJECTED, WITHDRAWN -> emptySet()
         }
 
+    /**
+     * Checks whether a status change is allowed.
+     *
+     * @param next the target status
+     * @return true if [next] is in [allowedNext]
+     */
     fun canTransitionTo(next: DisputeStatus): Boolean = next in allowedNext
 
     companion object {

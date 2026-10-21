@@ -21,6 +21,11 @@ data class SubmitDisputeRequest(
     @field:Positive
     val disputedAmountMinor: Long,
 ) {
+    /**
+     * Converts the request into a service command.
+     *
+     * @return the command for the dispute service
+     */
     fun toCommand() = SubmitDisputeCommand(transactionId, reason, description, disputedAmountMinor)
 }
 
@@ -57,6 +62,7 @@ data class HistoryResponse(
     val changedAt: Instant,
 )
 
+/** Maps a transaction to its API response. The card is exposed by its last four digits only. */
 fun Transaction.toResponse() = TransactionResponse(
     id = id,
     cardLastFour = card.lastFour,
@@ -66,6 +72,7 @@ fun Transaction.toResponse() = TransactionResponse(
     occurredAt = occurredAt,
 )
 
+/** Maps a dispute to its API response. */
 fun Dispute.toResponse() = DisputeResponse(
     id = id,
     transactionId = transaction.id,
@@ -77,6 +84,7 @@ fun Dispute.toResponse() = DisputeResponse(
     updatedAt = updatedAt,
 )
 
+/** Maps a status change to its API response. */
 fun DisputeStatusHistory.toResponse() = HistoryResponse(
     fromStatus = fromStatus,
     toStatus = toStatus,

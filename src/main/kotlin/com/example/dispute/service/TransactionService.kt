@@ -9,6 +9,12 @@ import java.util.UUID
 @Service
 class TransactionService(private val transactions: TransactionRepository) {
 
+    /**
+     * Lists the customer's transactions, newest first.
+     *
+     * @param customerId the customer whose transactions to list
+     * @return the transactions, newest first
+     */
     @Transactional(readOnly = true)
     fun listFor(customerId: UUID): List<Transaction> =
         transactions.findAllByCardCustomerIdOrderByOccurredAtDesc(customerId)

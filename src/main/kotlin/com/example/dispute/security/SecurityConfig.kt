@@ -13,6 +13,12 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableWebSecurity
 class SecurityConfig {
 
+    /**
+     * Configures stateless HTTP Basic authentication. Only the health endpoint is public.
+     *
+     * @param http the builder to configure
+     * @return the configured filter chain
+     */
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain =
         http
@@ -25,6 +31,11 @@ class SecurityConfig {
             }
             .build()
 
+    /**
+     * Provides the encoder used to verify customer passwords.
+     *
+     * @return a BCrypt password encoder
+     */
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 }

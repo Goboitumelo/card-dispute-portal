@@ -19,6 +19,12 @@ import java.util.UUID
 @RequestMapping("/api/disputes")
 class DisputeController(private val disputes: DisputeService) {
 
+    /**
+     * Opens a dispute for one of the customer's transactions.
+     *
+     * @param request the dispute details
+     * @return 201 Created with a Location header and the new dispute
+     */
     @PostMapping
     fun submit(
         @AuthenticationPrincipal principal: CustomerPrincipal,
@@ -30,16 +36,29 @@ class DisputeController(private val disputes: DisputeService) {
             .body(dispute.toResponse())
     }
 
+    /** Lists the customer's disputes, newest first. */
     @GetMapping
     fun list(@AuthenticationPrincipal principal: CustomerPrincipal): List<DisputeResponse> =
         disputes.listFor(principal.customerId).map { it.toResponse() }
 
+    /**
+     * Returns one of the customer's disputes.
+     *
+     * @param id the dispute to return
+     * @return the dispute
+     */
     @GetMapping("/{id}")
     fun get(
         @AuthenticationPrincipal principal: CustomerPrincipal,
         @PathVariable id: UUID,
     ): DisputeResponse = disputes.getFor(principal.customerId, id).toResponse()
 
+    /**
+     * Returns the status history of one of the customer's disputes, oldest first.
+     *
+     * @param id the dispute whose history to return
+     * @return the status changes, oldest first
+     */
     @GetMapping("/{id}/history")
     fun history(
         @AuthenticationPrincipal principal: CustomerPrincipal,
@@ -47,6 +66,13 @@ class DisputeController(private val disputes: DisputeService) {
     ): List<HistoryResponse> =
         disputes.historyFor(principal.customerId, id).map { it.toResponse() }
 
+    /**
+     * Withdraws one of the customer's disputes. The request body is optional.
+     *
+     * @param id the dispute to withdraw
+     * @param request an optional note for the withdrawal
+     * @return the withdrawn dispute
+     */
     @PostMapping("/{id}/withdraw")
     fun withdraw(
         @AuthenticationPrincipal principal: CustomerPrincipal,
@@ -60,6 +86,7 @@ class DisputeController(private val disputes: DisputeService) {
 @RequestMapping("/api/transactions")
 class TransactionController(private val transactions: TransactionService) {
 
+    /** Lists the customer's transactions, newest first. */
     @GetMapping
     fun list(@AuthenticationPrincipal principal: CustomerPrincipal): List<TransactionResponse> =
         transactions.listFor(principal.customerId).map { it.toResponse() }

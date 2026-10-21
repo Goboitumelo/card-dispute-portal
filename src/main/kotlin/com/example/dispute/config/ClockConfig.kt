@@ -7,6 +7,11 @@ import java.time.Clock
 @Configuration
 class ClockConfig {
 
+    /**
+     * Provides the clock used for all timestamps.
+     *
+     * @return the system clock in UTC
+     */
     @Bean
     fun clock(): Clock = Clock.systemUTC()
 }

@@ -15,17 +15,27 @@ class CustomerPrincipal(
     private val passwordHash: String,
 ) : UserDetails {
 
+    /** Grants the customer role to every authenticated user. */
     override fun getAuthorities(): Collection<GrantedAuthority> =
         listOf(SimpleGrantedAuthority("ROLE_CUSTOMER"))
 
+    /** Returns the stored password hash. */
     override fun getPassword(): String = passwordHash
 
+    /** Returns the customer's email, which is used as the username. */
     override fun getUsername(): String = email
 }
 
 @Service
 class CustomerUserDetailsService(private val customers: CustomerRepository) : UserDetailsService {
 
+    /**
+     * Loads a customer by email for authentication.
+     *
+     * @param username the customer's email address
+     * @return the principal for the customer
+     * @throws UsernameNotFoundException if no customer has that email
+     */
     override fun loadUserByUsername(username: String): UserDetails {
         val customer = customers.findByEmail(username)
             ?: throw UsernameNotFoundException("No customer with that email")
