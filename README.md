@@ -1,6 +1,6 @@
 # Card Dispute Portal
 
-Backend service that lets bank customers raise and track disputes on card transactions. Built with Kotlin, Spring Boot 4, PostgreSQL 16, Flyway, and Spring Security (HTTP Basic).
+Backend service that lets bank customers raise and track disputes on card transactions. Built with Kotlin, Spring Boot 4, PostgreSQL 16, Flyway, and Spring Security (opaque bearer tokens).
 
 ## Requirements
 
@@ -56,11 +56,13 @@ Docker must be running. The integration tests start `postgres:16` with Testconta
 
 ## API
 
-All endpoints require HTTP Basic authentication with a customer's email and password, except `/actuator/health`.
+Log in with a customer's email and password to get a bearer token. Send the token in the `Authorization: Bearer <token>` header on every other request, except `/actuator/health`. Tokens are stored hashed on the server and can be revoked with `POST /api/auth/logout`.
 
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/actuator/health` | Health check (public). |
+| `POST` | `/api/auth/login` | Exchange `{"email", "password"}` for a bearer token (public). |
+| `POST` | `/api/auth/logout` | Revoke the bearer token that made the request. Returns `204`. |
 | `GET` | `/api/transactions` | The caller's card transactions across all cards. |
 | `POST` | `/api/disputes` | Submit a dispute. Returns `201` with a `Location` header. |
 | `GET` | `/api/disputes` | The caller's disputes. |
@@ -68,10 +70,18 @@ All endpoints require HTTP Basic authentication with a customer's email and pass
 | `GET` | `/api/disputes/{id}/history` | Status history for one dispute. |
 | `POST` | `/api/disputes/{id}/withdraw` | Withdraw an open dispute. Optional body: `{"note": "..."}`. |
 
+Log in and capture the token:
+
+```bash
+TOKEN=$(curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"email":"thandi@example.com","password":"password"}' \
+  http://localhost:8080/api/auth/login | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
+```
+
 Submit a dispute:
 
 ```bash
-curl -u thandi@example.com:password \
+curl -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"transactionId":"b0000000-0000-0000-0000-000000000002","reason":"DUPLICATE_CHARGE","description":"Charged twice","disputedAmountMinor":129900}' \
   http://localhost:8080/api/disputes
@@ -83,6 +93,8 @@ Error responses use `application/problem+json` (RFC 9457):
 - `409` for a second open dispute on the same transaction, a withdrawal of a closed dispute, or a concurrent update.
 - `422` for a dispute outside the window or above the transaction amount.
 - `400` for invalid input.
+- `401` for a missing or invalid bearer token, or wrong login credentials.
+- `429` after repeated failed logins from one client. The `Retry-After` header gives the wait in seconds. The limit is set by `dispute.login-rate-limit.max-failures` (default `5`) and `dispute.login-rate-limit.window` (default `PT15M`).
 
 ## Dispute rules
 
@@ -120,4 +132,4 @@ src/main/resources/db/
 ## Known limitations
 
 - Staff endpoints are not implemented. The state machine supports staff transitions, but no controller exposes them yet.
-- Authentication uses HTTP Basic over plain HTTP in the compose setup. Put the service behind TLS before any real deployment.
+- The compose setup serves plain HTTP. Bearer tokens sent over plain HTTP can be intercepted. Put the service behind TLS before any real deployment.
