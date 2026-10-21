@@ -1,6 +1,7 @@
 package com.example.dispute.api
 
 import com.example.dispute.service.ConflictException
+import com.example.dispute.service.InvalidCredentialsException
 import com.example.dispute.service.NotFoundException
 import com.example.dispute.service.UnprocessableException
 import org.springframework.http.HttpStatus
@@ -42,6 +43,16 @@ class ApiExceptionHandler {
     @ExceptionHandler(UnprocessableException::class)
     fun unprocessable(ex: UnprocessableException): ResponseEntity<ProblemDetail> =
         problem(HttpStatus.UNPROCESSABLE_CONTENT, ex.message)
+
+    /**
+     * Maps [InvalidCredentialsException] to 401 without revealing which field was wrong.
+     *
+     * @param ex the exception to map
+     * @return a problem response carrying the exception message
+     */
+    @ExceptionHandler(InvalidCredentialsException::class)
+    fun invalidCredentials(ex: InvalidCredentialsException): ResponseEntity<ProblemDetail> =
+        problem(HttpStatus.UNAUTHORIZED, ex.message)
 
     /**
      * Maps an optimistic locking failure to 409, asking the client to reload.

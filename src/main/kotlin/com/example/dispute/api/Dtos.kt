@@ -12,6 +12,20 @@ import jakarta.validation.constraints.Size
 import java.time.Instant
 import java.util.UUID
 
+data class LoginRequest(
+    @field:NotBlank
+    @field:Size(max = 254)
+    val email: String,
+    @field:NotBlank
+    @field:Size(max = 200)
+    val password: String,
+)
+
+data class LoginResponse(
+    val token: String,
+    val expiresAt: Instant,
+)
+
 data class SubmitDisputeRequest(
     val transactionId: UUID,
     val reason: DisputeReason,

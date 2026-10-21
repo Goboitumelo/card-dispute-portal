@@ -1,5 +1,6 @@
 package com.example.dispute.repository
 
+import com.example.dispute.domain.AuthToken
 import com.example.dispute.domain.Card
 import com.example.dispute.domain.Customer
 import com.example.dispute.domain.Dispute
@@ -14,6 +15,8 @@ interface CustomerRepository : JpaRepository<Customer, UUID> {
     /** Finds a customer by email, or null if none exists. */
     fun findByEmail(email: String): Customer?
 }
+
+interface AuthTokenRepository : JpaRepository<AuthToken, String>
 
 interface CardRepository : JpaRepository<Card, UUID> {
     /** Lists the cards owned by a customer. */

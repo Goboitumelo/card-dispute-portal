@@ -1,17 +1,19 @@
 package com.example.dispute.api
 
 import com.example.dispute.TestcontainersConfiguration
+import com.jayway.jsonpath.JsonPath
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.RequestPostProcessor
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -99,7 +101,21 @@ class DisputeControllerTest @Autowired constructor(
             .andExpect(status().isConflict)
     }
 
-    private fun thandi() = httpBasic("thandi@example.com", "password")
+    private fun thandi(): RequestPostProcessor {
+        val body = mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"email":"thandi@example.com","password":"password"}"""),
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+            .response
+            .contentAsString
+        val token: String = JsonPath.read(body, "$.token")
+        return RequestPostProcessor { request ->
+            request.apply { addHeader(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+        }
+    }
 
     private companion object {
         const val DUPLICATE_CHARGE_TX = "b0000000-0000-0000-0000-000000000002"
